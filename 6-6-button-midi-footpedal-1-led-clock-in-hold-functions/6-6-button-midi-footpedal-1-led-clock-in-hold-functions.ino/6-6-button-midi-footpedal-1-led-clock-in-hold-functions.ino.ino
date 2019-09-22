@@ -32,13 +32,13 @@ const byte led = 12;
 const int midi_channel = 1;
 // button press millisecond thresholds
 const unsigned long shortPress = 25;
-const unsigned long  longPress = 1000;
+const unsigned long  longPress = 750;
 
 // for led blinking, probably delete this.
-unsigned long blinkInterval = 500;
-unsigned long previousBlink = 0;
-bool ledState = true;
-bool blinkState = true;
+// unsigned long blinkInterval = 500;
+// unsigned long previousBlink = 0;
+// bool ledState = true;
+// bool blinkState = true;
 
 
 
@@ -196,6 +196,11 @@ void loop() {
               // a new press event occured
               // record when button went down
               button[i].counter = millis();
+
+              // turn led on only if clock is stopped or not receiving
+              if(play_flag == 0) {
+                digitalWrite(led,HIGH);
+              }
           }
 
           if (button[i].currentState == NOT_PRESSED) {
@@ -205,50 +210,60 @@ void loop() {
               if ((currentMillis - button[i].counter >= shortPress) && !(currentMillis - button[i].counter >= longPress)) {
                   // short press detected.
                   handleShortPress(i);
+
               }
               if ((currentMillis - button[i].counter >= longPress)) {
                   // the long press was detected
                   handleLongPress(i);
               }
+              // turn led off if clock is stopped or not receiving
+              if(play_flag == 0) {
+              digitalWrite(led,LOW);
+                }
           }
           // used to detect when state changes
           button[i].prevState = button[i].currentState;
       }
     }
 
-    blinkLED();
+    // blinkLED();
 }
 
 void handleShortPress(byte x) {
     usbMIDI.sendNoteOn (button[x].midi_note_a, 110, midi_channel);
     delay(10);
     usbMIDI.sendNoteOff(button[x].midi_note_a, 0, midi_channel);
-    blinkState = true;
-    ledState = true;
-    blinkInterval = blinkInterval / 2;
-    if (blinkInterval <= 50)
-        blinkInterval = 500;
+    // blinkState = true;
+    // ledState = true;
+    // blinkInterval = blinkInterval / 2;
+    // if (blinkInterval <= 50)
+    //     blinkInterval = 500;
+    // turn led off if clock is stopped or not receiving
+    if(play_flag == 0) {
+    digitalWrite(led,LOW);
+      }
 }
 
 void handleLongPress(byte x) {
     usbMIDI.sendNoteOn (button[x].midi_note_b, 110, midi_channel);
     delay(10);
     usbMIDI.sendNoteOff(button[x].midi_note_b, 0, midi_channel);
-    blinkState = false;
-    ledState = false;
+    // blinkState = false;
+    // ledState = false;
+
 }
 
-void blinkLED() {
-    // blink the LED (or don't!)
-    if (blinkState) {
-        if ( (millis() - previousBlink) >= blinkInterval) {
-            // blink the LED
-            ledState = !ledState;
-            previousBlink = millis();
-        }
-    } else {
-        ledState = false;
-    }
-    digitalWrite(led, ledState);
-}
+// void blinkLED() {
+//     // blink the LED (or don't!)
+//     if (blinkState) {
+//         if ( (millis() - previousBlink) >= blinkInterval) {
+//             // blink the LED
+//             ledState = !ledState;
+//             previousBlink = millis();
+//         }
+//     } else {
+//         ledState = false;
+//     }
+//     digitalWrite(led, ledState);
+// }
 
